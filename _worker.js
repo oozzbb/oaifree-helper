@@ -485,7 +485,7 @@ async function injectFloatingBall(html) {
                 });
     
                 function submitAccount() {
-                    var account = document.getElementById('an').value;
+                    var account = `+(setan ? `'-1'`:`document.getElementById('an').value`)+`;
                     if (account) {
                         var form = document.getElementById('switchAccountForm');
                         var input = document.getElementById('switchAccountInput');
@@ -3327,7 +3327,7 @@ async function getAccountNumber(userName, initialaccountNumber, antype, mode, an
       .map(num => parseInt(num, 10))
       .filter(num => !isNaN(num));
 
-    if (aliveAccounts.length > 0) {
+    if (initialaccountNumber != -1 && aliveAccounts.length > 0) {
       let minAccount = Math.min(...aliveAccounts);
       if (await checkAndRemoveIssueAccount(minAccount)) {
         aliveAccounts = aliveAccounts.filter(acc => acc !== minAccount);
@@ -3358,7 +3358,7 @@ async function getAccountNumber(userName, initialaccountNumber, antype, mode, an
 
       if (recentLogins.length > 0) {
         const lastAccount = recentLogins[recentLogins.length - 1].accountNumber;
-        if (await checkAndRemoveIssueAccount(lastAccount)) {
+        if (initialaccountNumber == -1 || await checkAndRemoveIssueAccount(lastAccount)) {
           const aliveAccountString = await KV.get(`${antype}AliveAccounts`) || '';
           const aliveAccounts = aliveAccountString
             .split(',')
@@ -3368,6 +3368,8 @@ async function getAccountNumber(userName, initialaccountNumber, antype, mode, an
           if (aliveAccounts.length > 0) {
             const randomAccount = aliveAccounts[Math.floor(Math.random() * aliveAccounts.length)];
             return randomAccount;
+          } else if (initialaccountNumber == -1) {
+            return lastAccount;
           }
           return 0;
         }
