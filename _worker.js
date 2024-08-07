@@ -147,9 +147,10 @@ async function handleRequest(request) {
       const [name, value] = cookie.trim().split('=');
       if (name === 'aian') {
         aian = value;
-      } else if (name === "username") {
-        chatusername = value;
-      }
+      } 
+      // else if (name === "username") {
+      //   chatusername = value;
+      // }
     }
   }
 
