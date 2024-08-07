@@ -1,4 +1,7 @@
 
 # oaifree-helper
 
-请参考[https://github.com/jyx04/oaifree-helper](https://github.com/jyx04/oaifree-helper)部署后覆盖worker.js文件
+使用
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/kylelv2000/oaifree_helper)一键部署
+
+请参考[https://github.com/jyx04/oaifree-helper](https://github.com/jyx04/oaifree-helper)
