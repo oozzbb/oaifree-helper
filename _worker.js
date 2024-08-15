@@ -297,7 +297,7 @@ async function handleRequest(request) {
     }
 
     const data = await request.formData();
-    const newAccount = data.get('an');
+    const newAccount = data.get('an') || randomAliveAccountOptions();
     const currentAccount = request.headers.get('Cookie').split(';')
       .find(c => c.trim().startsWith('username='))
       ?.split('=')[1];
@@ -385,7 +385,7 @@ async function injectFloatingBall(html) {
                 `+(setan ? ``:`
                     <div class="input-wrapper">
                         <select id="an" name="an" class="choose-account">
-                            <option value="" selected disabled hidden>Select Account</option>
+                            <option value="" selected disabled hidden>Random Account</option>
                             ${aliveAccountOptions}
                         </select>
                     </div>`) +`
@@ -486,14 +486,10 @@ async function injectFloatingBall(html) {
     
                 function submitAccount() {
                     var account = `+(setan ? `'-1'`:`document.getElementById('an').value`)+`;
-                    if (account) {
-                        var form = document.getElementById('switchAccountForm');
-                        var input = document.getElementById('switchAccountInput');
-                        input.value = account;
-                        form.submit();
-                    } else {
-                        alert('Please select an account');
-                    }
+                    var form = document.getElementById('switchAccountForm');
+                    var input = document.getElementById('switchAccountInput');
+                    input.value = account;
+                    form.submit();
                 }
     
                 function makeDraggable(element) {
@@ -501,10 +497,17 @@ async function injectFloatingBall(html) {
                     let startY, initialY;
                     const maxHeight = window.innerHeight * 0.9;
                     const minHeight = window.innerHeight * 0.1;
+                    let dragThreshold = 5; // Minimum distance to consider as a drag
+                    let isMoving = false;
     
                     element.addEventListener('mousedown', startDrag);
+                    element.addEventListener('touchstart', starttouchDrag);
+
                     element.addEventListener('mouseup', stopDrag);
+                    element.addEventListener('touchend', stopDrag);
+
                     element.addEventListener('mousemove', preventDrag);
+                    element.addEventListener('touchmove', preventDrag);
     
                     function startDrag(e) {
                         // Ignore drag start if the event target is an input or select element
@@ -512,39 +515,73 @@ async function injectFloatingBall(html) {
                             return;
                         }
                         isDragging = true;
+                        isMoving = false;
                         startY = e.clientY;
                         initialY = element.offsetTop;
                         document.addEventListener('mousemove', drag);
+                        document.addEventListener('touchmove', drag);
                         document.addEventListener('mouseup', stopDrag);
+                        document.addEventListener('touchend', stopDrag);
+                        e.preventDefault();
+                    }
+                    function starttouchDrag(e) {
+                        // Ignore drag start if the event target is an input or select element
+                        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') {
+                            return;
+                        }
+                        isDragging = true;
+                        isMoving = false;
+                        startY = e.touches[0].clientY;
+                        initialY = element.offsetTop;
+                        document.addEventListener('mousemove', drag);
+                        document.addEventListener('touchmove', drag);
+                        document.addEventListener('mouseup', stopDrag);
+                        document.addEventListener('touchend', stopDrag);
                     }
     
                     function drag(e) {
                         if (isDragging) {
-                            const dy = e.clientY - startY;
-                            let newTop = initialY + dy;
-    
-                            // Constrain the movement within 10% to 90% of the viewport height
-                            if (newTop < minHeight) {
-                                newTop = minHeight;
-                            } else if (newTop > maxHeight) {
-                                newTop = maxHeight;
+                            const clientY = e.clientY || e.touches[0].clientY;
+                            const dy = clientY - startY;
+                            if (Math.abs(dy) > dragThreshold) {
+                                isMoving = true;
+                                e.preventDefault();
                             }
-    
-                            element.style.top = newTop + 'px';
-                            element.style.right = '20px'; // Keep it on the right side
-                            element.style.left = 'auto';  // Ensure it stays on the right side
+
+                            if (isMoving) {
+                                let newTop = initialY + dy;
+        
+                                // Constrain the movement within 10% to 90% of the viewport height
+                                if (newTop < minHeight) {
+                                    newTop = minHeight;
+                                } else if (newTop > maxHeight) {
+                                    newTop = maxHeight;
+                                }
+        
+                                element.style.top = newTop + 'px';
+                                element.style.right = '20px'; // Keep it on the right side
+                                element.style.left = 'auto';  // Ensure it stays on the right side
+                            }
                         }
                     }
     
                     function stopDrag() {
+                        if (!isMoving && isDragging) {
+                            // This is a click, not a drag
+                            element.click();
+                        }
                         isDragging = false;
+                        isMoving = false;
                         document.removeEventListener('mousemove', drag);
                         document.removeEventListener('mouseup', stopDrag);
+                        document.removeEventListener('touchmove', drag);
+                        document.removeEventListener('touchend', stopDrag);
                     }
     
                     function preventDrag(e) {
                         if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') {
                             isDragging = false;
+                            isMoving = false;
                         }
                     }
                 }
